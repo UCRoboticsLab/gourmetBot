@@ -21,6 +21,7 @@ def main():
     time.sleep(2.0)
 
     left.move_to_neutral(15.0)
+    left.set_joint_position_speed(0.3)
 
 print("Saluting...")
 main()

@@ -5,7 +5,7 @@ import rospy
 import time
 import baxter_interface
 from run_positions import move_list
-
+import simpleaudio as sa
 from baxter_interface import CHECK_VERSION
 
 
@@ -23,5 +23,5 @@ def main():
     left.move_to_neutral(15.0)
 
 print("Saluting...")
-main()
+fc.LeftRightCheck.run()
 print("Program executed.")

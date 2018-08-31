@@ -4,6 +4,7 @@ import rospy
 import baxter_interface
 import time
 from run_positions import move_list
+from joint_position_keyboard_test import set_position_order
 
 from baxter_interface import CHECK_VERSION
 
