@@ -20,7 +20,7 @@ pos_down = {'left_s1': 0.24672816419677735}
 def move_arm():
 
     print("moving down")
-    move_list(arm='left', p_list=[pos_down], speed=1.0)
+    move_list(arm='left', p_list=[pos_down], speed=0.1)
     rospy.signal_shutdown("shutdown")
 
 def def_height_sensor():
@@ -42,8 +42,8 @@ class HeightSensor():
     def __sensorCallback(self, msg, side):
         global left_distance
         left_distance = msg.range
-        if left_distance < 0.15:
-            print("Distance to table: {:.2f} cm".format(left_distance * 100))
+        if left_distance < 0.16:
+            print("Distance: {:.2f}".format(left_distance * 100))
             rospy.signal_shutdown("shutdown")
 
 

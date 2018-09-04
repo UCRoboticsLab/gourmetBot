@@ -34,19 +34,18 @@ class HeightSensor():
     def __sensorCallback(self, msg, side):
         global left_distance, i
         left_distance = msg.range
-        if left_distance < 0.2:
-            if i < 10:
+        if left_distance < 0.1:
+            while i < 1:
                 print(left_distance)
                 #time.sleep(0.2)
                 print("Grabbing")
                 print("i:", i)
                 grip_left.close()
                 time.sleep(0.5)
-                grip_left.open()
-                time.sleep(0.5)
+                grip_left.stop()
+                #grip_left.open()
                 i+=1
-            else:
-                rospy.signal_shutdown("reasons")
+            rospy.signal_shutdown("reasons")
 
 
 print("Running grab_left...")
@@ -56,8 +55,8 @@ grip_left = baxter_interface.Gripper('left', CHECK_VERSION)
 #if not grip_left.calibrated():
 grip_left.calibrate()
 grip_left.set_velocity(100.0)
-grip_left.set_moving_force(100.0)
-grip_left.set_holding_force(90.0)
+grip_left.set_moving_force(90.0)
+grip_left.set_holding_force(50.0)
 grip_left.open(block=True)
 time.sleep(0.5)
 thread_height_sensor = threading.Thread(name='height_sensor', target=def_height_sensor)

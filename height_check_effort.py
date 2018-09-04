@@ -11,37 +11,39 @@ from run_positions import move_list
 from baxter_interface import CHECK_VERSION
 
 
+left_effort = 0.0
+
+pos_up = {'left_w0': -0.01687378864746094, 'left_w1': 1.6225681765319826, 'left_w2': 0.0122718462890625, 'left_e0': 0.07938350568237305, 'left_e1': -0.05138835633544922, 'left_s0': -0.6879903825805664, 'left_s1': -0.24236896420898438}
+
+pos_down = {'left_s1': 0.24672816419677735}
+
 def move_arm():
 
-    pos_arm_down = {'left_w0': 0.04141748122558594, 'left_w1': -0.031446606115722656, 'left_w2': -0.04141748122558594, 'left_e0': -0.042951462011718754, 'left_e1': -0.034898062884521484, 'left_s0': -0.8206797205810548, 'left_s1': 0.39193209085693365}
+    print("moving down")
+    #move_list(arm='left', p_list=[pos_down], speed=0.1)
+    #rospy.signal_shutdown("shutdown")
 
-    move_list(neutral=False, arm='left', p_list=[pos_arm_down])
+def def_height_sensor():
+    i = 0
 
+    while not rospy.is_shutdown() and i < 10:
+        left_effort = left.joint_efforts()['left_s1']
+        left_angle = left.joint_angles()['left_s1']
+        print ("left_s1 effort:", left_effort)
+        print ("left_s1 position:", left_angle)
+        time.sleep(0.5)
+        i += 1
 
-def check_effort():
+    rospy.signal_shutdown("reason")
 
-    left = baxter_interface.Limb('left')
-
-    print (left.joint_efforts())
-
-def main():
-
-    rospy.init_node("height_check")
-    left = baxter_interface.Limb('left')
-
-    pos_arm_up = {'left_w0': 0.04180097642211914, 'left_w1': -0.042184471618652346, 'left_w2': -0.026461168560791018, 'left_e0': -0.042184471618652346, 'left_e1': -0.04985437554931641, 'left_s0': -0.8356360332458497, 'left_s1': -0.031063110919189455}
-
-    left.set_joint_position_speed(0.1)
-
-    move_list(neutral=False, arm='left', p_list=[pos_arm_up])
-
-    thread_move_arm = threading.Thread(name='move_arm', target=move_arm)
-    thread_check_effort = threading.Thread(name='check_effort', target=check_effort)
-    thread_move_arm.start()
-    thread_check_effort.start()
-
-    left.set_joint_position_speed(0.1)
 
 print("Checking height...")
+rospy.init_node("height_check")
+left = baxter_interface.Limb('left')
+left.set_joint_position_speed(0.1)
+#move_list(arm='left', p_list=[pos_up])
+thread_move_arm = threading.Thread(name='move_arm', target=move_arm)
+thread_height_sensor = threading.Thread(name='height_sensor', target=def_height_sensor)
+thread_move_arm.start()
+thread_height_sensor.start()
 
-print("Program executed.")
