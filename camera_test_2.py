@@ -23,7 +23,7 @@ bridge = CvBridge()
 
 i1,i2,i3,i4 = 0,0,0,0
 button_increment = 5
-show_colour = 'test'
+show_colour = 'blue'
 
 def min_max_numbers():
     global i1,i2,i3,i4
