@@ -3,7 +3,7 @@
 import argparse
 import rospy
 import baxter_interface
-from run_positions import move_list
+from run_positions import move_list_smooth
 
 from baxter_interface import CHECK_VERSION
 
@@ -18,10 +18,10 @@ def main():
     position_2 = ({'left_e0': -2.5})
 
 
-    move_list(arm='left', p_list=[position_1], threshold=0.05, speed=0.8)
+    move_list_smooth(arm='left', p_list=[position_1], threshold=0.05, speed=0.8)
     for i in range(2):
-        move_list(arm='left', p_list=[position_2, position_1], threshold=0.05, speed=0.5)
+        move_list_smooth(arm='left', p_list=[position_2, position_1], threshold=0.05, speed=0.5)
 
-    move_list(arm='left', p_list=[position_init], threshold=0.05, speed=0.5)
+    move_list_smooth(arm='left', p_list=[position_init], threshold=0.05, speed=0.5)
 
 main()

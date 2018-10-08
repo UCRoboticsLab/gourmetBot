@@ -3,7 +3,7 @@
 import argparse
 import rospy
 import baxter_interface
-from run_positions import move_list
+from run_positions import move_list_smooth
 
 from baxter_interface import CHECK_VERSION
 
