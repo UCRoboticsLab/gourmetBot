@@ -17,6 +17,9 @@ import numpy as np
 from cv_bridge import CvBridge, CvBridgeError
 # OpenCV2 for saving an image
 import cv2
+import threading
+from run_positions import cartesian_move_rel
+import time
 
 # Instantiate CvBridge
 bridge = CvBridge()
@@ -27,6 +30,9 @@ show_colour = 'blue'
 object_loc_arr = []
 object_count = 0
 str_img_1 = 'Circle.jpg'
+img_w, img_h, obj_w, obj_h = 0,0,0,0
+boRun = True
+
 
 def min_max_numbers():
     global i1,i2,i3,i4
@@ -74,17 +80,39 @@ def show_img(colour):
         upper_red = np.array([5, 255, 255])
         return lower_red, upper_red
 
+def align_camera():
+    global img_h, img_w, obj_h, obj_w
+    global boRun
+    while boRun:
+        print("test")
+        if abs((img_w * 0.5) - obj_w) > 20:
+            if (img_w * 0.5) < obj_w:
+                while (img_w * 0.5) < obj_w:
+                    cartesian_move_rel(limb="left", x=0.02, y=0.0, z=0.0)
+                cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
+            else:
+                while (img_w * 0.5) > obj_w:
+                    cartesian_move_rel(limb="left", x=-0.02, y=0.0, z=0.0)
+                cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
+
 def detect_objects(img_rgb, pt, w, h):
     global object_loc_arr, object_count
     global str_img_1
+    global img_h, img_w, obj_h, obj_w
+
     if len(object_loc_arr) == 0:
         object_loc = ({'x': None, 'y': None})
         object_loc['x'] = pt[0]
         object_loc['y'] = pt[1]
         object_loc_arr.append(object_loc)
         cv2.rectangle(img_rgb, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
+        center = pt[0] + (w * 0.5), pt[1] + (h * 0.5)
+        cv2.circle(img_rgb, (int(center[0]), int(center[1])), 1, (0, 255, 0), 2)
         cv2.putText(img=img_rgb, text=str_img_1, org=(pt[0], pt[1] - int(0.1 * h)),
                     fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, thickness=2, color=(0, 0, 0))
+        img_h, img_w, img_channel = img_rgb.shape
+        obj_h, obj_w = center[1], center[0]
+
         object_count += 1
 
     else:
@@ -101,11 +129,14 @@ def detect_objects(img_rgb, pt, w, h):
                             fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, thickness=2, color=(0, 0, 0))
                 object_count += 1
 
+
+
 def image_callback(msg):
     global i1,i2,i3,i4,button_increment
     global colour
     global object_loc_arr, object_count
     global str_img_1
+    global boRun
 
     camera_x_gap = 625
     camera_y_gap = 450
@@ -138,16 +169,29 @@ def image_callback(msg):
             cv2.rectangle(img_rgb, pt, (pt[0] + w, pt[1] + h), (255, 0, 0), 2)
 
         cv2.imshow('res.png', img_rgb)
-        cv2.waitKey(5)
+        if cv2.waitKey(5) & 0xff == 27:
+            boRun = False
+            rospy.signal_shutdown("user exit")
+            cv2.destroyAllWindows()
 
-def main():
-    rospy.init_node('image_listener')
+def get_image():
     # Define your image topic
     image_topic = "/cameras/left_hand_camera/image"
     # Set up your subscriber and define its callback
     rospy.Subscriber(image_topic, Image, image_callback)
     # Spin until ctrl + c
-    rospy.spin()
+    while not rospy.is_shutdown():
+        rospy.spin()
+
+def main():
+    rospy.init_node('image_listener')
+    thread_get_image = threading.Thread(name='get_image', target=get_image)
+    thread_align_camera = threading.Thread(name='align_camera', target=align_camera)
+    thread_get_image.start()
+    thread_align_camera.start()
+
+
+
 
 if __name__ == '__main__':
     main()

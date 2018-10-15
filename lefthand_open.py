@@ -16,5 +16,4 @@ grip_right = baxter_interface.Gripper('right', CHECK_VERSION)
 
 if not grip_left.calibrated():
     grip_left.calibrate()
-grip_left.set_holding_force(50.0)
-grip_left.open(block=True, timeout=2.0)
+grip_left.open()

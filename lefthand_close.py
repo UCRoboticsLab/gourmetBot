@@ -16,8 +16,15 @@ grip_right = baxter_interface.Gripper('right', CHECK_VERSION)
 
 if not grip_left.calibrated():
     grip_left.calibrate()
-grip_left.set_holding_force(50.0)
-grip_left.open(block=True, timeout=2.0)
 
-time.sleep(2.0)
-grip_left.close(block=True, timeout=2.0)
+while not rospy.is_shutdown():
+    print("moving to 50")
+    #grip_left.close(block=True, timeout=2.0)
+    grip_left.set_velocity(5.0)
+    grip_left.command_position(position=50.0)
+    time.sleep(1.0)
+    print("moving to 0")
+    grip_left.command_position(position=0.0)
+    time.sleep(1.0)
+
+
