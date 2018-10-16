@@ -84,16 +84,20 @@ def align_camera():
     global img_h, img_w, obj_h, obj_w
     global boRun
     while boRun:
-        print("test")
         if abs((img_w * 0.5) - obj_w) > 20:
             if (img_w * 0.5) < obj_w:
-                while (img_w * 0.5) < obj_w:
+                if (img_w * 0.5) < obj_w:
+                    #cartesian_move_rel(limb="left", x=0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
                     cartesian_move_rel(limb="left", x=0.02, y=0.0, z=0.0)
-                cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
+                    obj_w = img_w * 0.5
+                #cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
             else:
-                while (img_w * 0.5) > obj_w:
+                if (img_w * 0.5) > obj_w:
                     cartesian_move_rel(limb="left", x=-0.02, y=0.0, z=0.0)
-                cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
+                    #cartesian_move_rel(limb="left", x=-0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
+                    obj_w = img_w * 0.5
+                #cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
+        time.sleep(0.01)
 
 def detect_objects(img_rgb, pt, w, h):
     global object_loc_arr, object_count
@@ -117,7 +121,7 @@ def detect_objects(img_rgb, pt, w, h):
 
     else:
         for i in range(len(object_loc_arr)):
-            if abs(pt[0] - object_loc_arr[i]['x']) < 10 and abs(pt[1] - object_loc_arr[i]['y']) < 10:
+            if abs(pt[0] - object_loc_arr[i]['x']) < 20 and abs(pt[1] - object_loc_arr[i]['y']) < 20:
                 break
             elif i == len(object_loc_arr) - 1:
                 new_object_loc = ({'x': None, 'y': None})
@@ -125,7 +129,7 @@ def detect_objects(img_rgb, pt, w, h):
                 new_object_loc['y'] = pt[1]
                 object_loc_arr.append(new_object_loc)
                 cv2.rectangle(img_rgb, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
-                cv2.putText(img=img_rgb, text="Circle.jpg", org=(pt[0], pt[1] - int(0.1 * h)),
+                cv2.putText(img=img_rgb, text=str_img_1, org=(pt[0], pt[1] - int(0.1 * h)),
                             fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, thickness=2, color=(0, 0, 0))
                 object_count += 1
 
@@ -154,7 +158,7 @@ def image_callback(msg):
         w, h = template.shape[::-1]
         w2, h2 = template2.shape[::-1]
 
-        threshold = 0.7
+        threshold = 0.6
 
         res = cv2.matchTemplate(img_gray, template, cv2.TM_CCOEFF_NORMED)
         loc = np.where(res >= threshold)
