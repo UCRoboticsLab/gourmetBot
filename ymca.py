@@ -5,7 +5,7 @@ import rospy
 import time
 import threading
 import baxter_interface
-from run_positions import move_list
+from run_positions import move_list_smooth
 
 from baxter_interface import CHECK_VERSION
 
@@ -32,7 +32,7 @@ class MoveLeft(threading.Thread):
 
     def run(self):
 
-        pos_y_left = {'left_w0': 0.030296120526123047, 'left_w1': 0.03758252926025391, 'left_w2': -2.852820767010498,
+        pos_y_left = {'left_w0                                                                                                                                                                      ': 0.030296120526123047, 'left_w1': 0.03758252926025391, 'left_w2': -2.852820767010498,
                       'left_e0': -3.0349809853637697, 'left_e1': -0.01457281746826172, 'left_s0': 0.49739326990356447,
                       'left_s1': -1.087208882171631}
 
@@ -44,7 +44,7 @@ class MoveLeft(threading.Thread):
 
         self.arm.set_joint_position_speed(0.8)
 
-        move_list(neutral=False, arm='left', p_list=[pos_y_left, pos_m_left, pos_c_left, pos_a_left], threshold=0.2)
+        move_list_smooth(neutral=False, arm='left', p_list=[pos_y_left, pos_m_left, pos_c_left, pos_a_left], threshold=0.2, speed=0.8)
 
         time.sleep(1.0)
 
@@ -70,11 +70,11 @@ class MoveRight(threading.Thread):
 
         self.arm.set_joint_position_speed(0.8)
 
-        move_list(neutral=False, arm='right', p_list=[pos_y_right, pos_m_right, pos_c_right], threshold=0.2)
+        move_list_smooth(neutral=False, arm='right', p_list=[pos_y_right, pos_m_right, pos_c_right], threshold=0.2, speed=0.8)
 
         time.sleep(0.8)
 
-        move_list(neutral=False, arm='right', p_list=[pos_a_right], threshold=0.1)
+        move_list_smooth(neutral=False, arm='right', p_list=[pos_a_right], threshold=0.1)
 
         time.sleep(1.0)
 
