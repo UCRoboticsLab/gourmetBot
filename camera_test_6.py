@@ -19,7 +19,11 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import threading
 from run_positions import cartesian_move_rel
+from run_positions import move_list_smooth
 import time
+import baxter_interface
+from baxter_interface import CHECK_VERSION
+
 
 # Instantiate CvBridge
 bridge = CvBridge()
@@ -81,28 +85,48 @@ def show_img(colour):
         return lower_red, upper_red
 
 def align_camera():
-    global img_h, img_w, obj_h, obj_w
+    global img_w, obj_w, img_h, obj_h
     global boRun
+    speed = 0.0005
+
     while boRun:
+        x_move = 0.0
+        z_move = 0.0
         if abs((img_w * 0.5) - obj_w) > 20:
             if (img_w * 0.5) < obj_w:
-                if (img_w * 0.5) < obj_w:
-                    #cartesian_move_rel(limb="left", x=0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
-                    cartesian_move_rel(limb="left", x=0.02, y=0.0, z=0.0)
-                    obj_w = img_w * 0.5
-                #cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
-            else:
-                if (img_w * 0.5) > obj_w:
-                    cartesian_move_rel(limb="left", x=-0.02, y=0.0, z=0.0)
-                    #cartesian_move_rel(limb="left", x=-0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
-                    obj_w = img_w * 0.5
-                #cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
-        time.sleep(0.01)
+                x_move = speed
+                #cartesian_move_rel(limb="left", x=0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
+            elif (img_w * 0.5) > obj_w:
+                x_move = -speed
+                #cartesian_move_rel(limb="left", x=-0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
+
+        if abs((img_h * 0.5) - obj_h) > 20:
+            if abs((img_h * 0.5) - obj_h) > 20:
+                if (img_h * 0.5) < obj_h:
+                    z_move = -speed
+                    # cartesian_move_rel(limb="left", x=0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
+                # cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
+                elif (img_h * 0.5) > obj_h:
+                    z_move = speed
+                    # cartesian_move_rel(limb="left", x=-0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
+                # cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
+        print(abs((img_w * 0.5) - obj_w))
+        if x_move == 0.0 and z_move == 0.0:
+            print("centered")
+        else:
+            #cartesian_move_rel(limb="left", x=x_move, y=0.0, z=z_move, threshold=0.1)
+            cartesian_move_rel(limb="left", x=x_move * abs((img_w * 0.5) - obj_w), y=0.0, z=z_move * abs((img_h * 0.5) - obj_h), threshold=0.1)
+
+        obj_w = img_w * 0.5
+        obj_h = img_h * 0.5
+        time.sleep(0.19)
 
 def detect_objects(img_rgb, pt, w, h):
     global object_loc_arr, object_count
     global str_img_1
     global img_h, img_w, obj_h, obj_w
+
+    cv2.circle(img_rgb, (int(img_w * 0.5), int(img_h * 0.5)), 1, (0, 0, 255), 2)
 
     if len(object_loc_arr) == 0:
         object_loc = ({'x': None, 'y': None})
@@ -189,13 +213,11 @@ def get_image():
 
 def main():
     rospy.init_node('image_listener')
+    move_list_smooth(arm="left", p_list=[{'left_w2': 0.0065,'left_w0': -0.0065}], speed=0.5)
     thread_get_image = threading.Thread(name='get_image', target=get_image)
     thread_align_camera = threading.Thread(name='align_camera', target=align_camera)
     thread_get_image.start()
     thread_align_camera.start()
-
-
-
 
 if __name__ == '__main__':
     main()
