@@ -36,7 +36,9 @@ object_loc_arr = []
 object_count = 0
 str_img_1 = 'Cake.png'
 img_w, img_h, obj_w, obj_h = 0,0,0,0
+template_w, template_h = 0,0
 boRun = True
+boAlign = False
 
 
 def min_max_numbers():
@@ -85,47 +87,25 @@ def show_img(colour):
         upper_red = np.array([5, 255, 255])
         return lower_red, upper_red
 
-def align_camera():
+def align_camera_to_corners():
     global img_w, obj_w, img_h, obj_h
-    global boRun
+    global boRun, boAlign
     speed = 0.0005
 
+    x_move = 0.0008
+
     while boRun:
-        x_move = 0.0
-        z_move = 0.0
-        if abs((img_w * 0.5) - obj_w) > 20:
-            if (img_w * 0.5) < obj_w:
-                x_move = speed
-                #cartesian_move_rel(limb="left", x=0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
-            elif (img_w * 0.5) > obj_w:
-                x_move = -speed
-                #cartesian_move_rel(limb="left", x=-0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
-
-        if abs((img_h * 0.5) - obj_h) > 20:
-            if abs((img_h * 0.5) - obj_h) > 20:
-                if (img_h * 0.5) < obj_h:
-                    z_move = -speed
-                    # cartesian_move_rel(limb="left", x=0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
-                # cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
-                elif (img_h * 0.5) > obj_h:
-                    z_move = speed
-                    # cartesian_move_rel(limb="left", x=-0.001*abs((img_w * 0.5) - obj_w), y=0.0, z=0.0)
-                # cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
-        print(abs((img_w * 0.5) - obj_w))
-        if x_move == 0.0 and z_move == 0.0:
-            print("centered")
-        else:
-            #cartesian_move_rel(limb="left", x=x_move, y=0.0, z=z_move, threshold=0.1)
-            cartesian_move_rel(limb="left", x=x_move * abs((img_w * 0.5) - obj_w), y=0.0, z=z_move * abs((img_h * 0.5) - obj_h), threshold=0.1)
-
-        obj_w = img_w * 0.5
-        obj_h = img_h * 0.5
-        time.sleep(0.19)
+        if boAlign:
+            #cartesian_move_rel(limb="left", x=-x_move * abs((img_w * 0.5) - object_loc_arr[0]['x']), y=0.0, z=0.0)
+            cartesian_move_rel(limb="left", x=-x_move * abs((img_w * 0.5) - object_loc_arr[0]['x']), y=0.0, z=0.0)
+            boAlign = False
+        time.sleep(0.5)
 
 def detect_objects(img_rgb, pt, w, h):
     global object_loc_arr, object_count
     global str_img_1, template_repeat_threshold
     global img_h, img_w, obj_h, obj_w
+    global boAlign
 
     cv2.circle(img_rgb, (int(img_w * 0.5), int(img_h * 0.5)), 1, (0, 0, 255), 2)
 
@@ -137,12 +117,14 @@ def detect_objects(img_rgb, pt, w, h):
         cv2.rectangle(img_rgb, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
         center = pt[0] + (w * 0.5), pt[1] + (h * 0.5)
         cv2.circle(img_rgb, (int(center[0]), int(center[1])), 1, (0, 255, 0), 2)
+
         cv2.putText(img=img_rgb, text=str_img_1, org=(pt[0], pt[1] - int(0.1 * h)),
                     fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, thickness=2, color=(0, 0, 0))
         img_h, img_w, img_channel = img_rgb.shape
         obj_h, obj_w = center[1], center[0]
 
         object_count += 1
+        boAlign = True
 
     else:
         for i in range(len(object_loc_arr)):
@@ -165,7 +147,8 @@ def image_callback(msg):
     global colour
     global object_loc_arr, object_count
     global str_img_1
-    global boRun
+    global boRun, boAlign
+    global template_w, template_h
 
     camera_x_gap = 625
     camera_y_gap = 450
@@ -181,6 +164,7 @@ def image_callback(msg):
         template = cv2.imread(str_img_1, 0)
         template2 = cv2.imread('Cross.jpg', 0)
         w, h = template.shape[::-1]
+        template_w, template_h = w, h
         w2, h2 = template2.shape[::-1]
 
         threshold = 0.7
@@ -189,8 +173,9 @@ def image_callback(msg):
         loc = np.where(res >= threshold)
         for pt in zip(*loc[::-1]):
             detect_objects(img_rgb, pt, w, h)
-        object_loc_arr = []
-        object_count = 0
+
+        #object_loc_arr = []
+        #object_count = 0
 
         res2 = cv2.matchTemplate(img_gray, template2, cv2.TM_CCOEFF_NORMED)
         loc = np.where(res2 >= threshold)
@@ -214,11 +199,13 @@ def get_image():
 
 def main():
     rospy.init_node('image_listener')
+    move_list_smooth(arm="left", p_list=[{'left_w0': -0.464412683001709, 'left_w1': 1.0829904350097657, 'left_w2': 0.5990194969848633, 'left_e0': 0.6089903720947266, 'left_e1': 1.0941117957092286, 'left_s0': -0.7643059266906739, 'left_s1': -0.570257357244873}
+], speed=0.3)
     #move_list_smooth(arm="left", p_list=[{'left_w2': 0.0065,'left_w0': -0.0065}], speed=0.5)
     thread_get_image = threading.Thread(name='get_image', target=get_image)
-    thread_align_camera = threading.Thread(name='align_camera', target=align_camera)
+    thread_align_camera_to_corners = threading.Thread(name='align_camera_to_corners', target=align_camera_to_corners)
     thread_get_image.start()
-    thread_align_camera.start()
+    thread_align_camera_to_corners.start()
 
 if __name__ == '__main__':
     main()

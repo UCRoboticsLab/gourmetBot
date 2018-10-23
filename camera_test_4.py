@@ -26,7 +26,7 @@ button_increment = 5
 show_colour = 'blue'
 object_loc_arr = []
 object_count = 0
-str_img_1 = 'Circle.jpg'
+str_img_1 = 'Cake.png'
 
 def min_max_numbers():
     global i1,i2,i3,i4
