@@ -85,12 +85,21 @@ def show_img(colour):
         upper_red = np.array([5, 255, 255])
         return lower_red, upper_red
 
+
+def open_hand():
+    grip_left = baxter_interface.Gripper('left', CHECK_VERSION)
+    if not grip_left.calibrated():
+        grip_left.calibrate()
+    grip_left.open(block=True, timeout=2.0)
+
+
 def align_camera():
     global img_w, obj_w, img_h, obj_h
     global boRun
+    boAlign = True
     speed = 0.0005
 
-    while boRun:
+    while boRun and boAlign:
         x_move = 0.0
         z_move = 0.0
         if abs((img_w * 0.5) - obj_w) > 20:
@@ -113,7 +122,14 @@ def align_camera():
                 # cartesian_move_rel(limb="left", x=0.0, y=0.0, z=0.0)
         print(abs((img_w * 0.5) - obj_w))
         if x_move == 0.0 and z_move == 0.0:
-            print("centered")
+            time.sleep(0.5)
+            if x_move == 0.0 and z_move == 0.0:
+                print("centered")
+                move_list_smooth(arm="left", p_list=[{"left_w2": 0.2, "left_w0": -1.35}], speed=0.8)
+                cartesian_move_rel(limb="left", x=0.0, y=-0.15, z=0.0)
+                thread_open_hand = threading.Thread(name='open_hand', target=open_hand)
+                thread_open_hand.start()
+                boAlign = False
         else:
             #cartesian_move_rel(limb="left", x=x_move, y=0.0, z=z_move, threshold=0.1)
             cartesian_move_rel(limb="left", x=x_move * abs((img_w * 0.5) - obj_w), y=0.0, z=z_move * abs((img_h * 0.5) - obj_h), threshold=0.1)
@@ -214,6 +230,7 @@ def get_image():
 
 def main():
     rospy.init_node('image_listener')
+    move_list_smooth(arm="left", p_list=[startPos], speed=0.8)
     thread_get_image = threading.Thread(name='get_image', target=get_image)
     thread_align_camera = threading.Thread(name='align_camera', target=align_camera)
     thread_get_image.start()

@@ -40,7 +40,6 @@ template_w, template_h = 0,0
 boRun = True
 boAlign = False
 
-
 def min_max_numbers():
     global i1,i2,i3,i4
     if i1 > 180:
@@ -167,7 +166,7 @@ def image_callback(msg):
         template_w, template_h = w, h
         w2, h2 = template2.shape[::-1]
 
-        threshold = 0.7
+        threshold = 0.6
 
         res = cv2.matchTemplate(img_gray, template, cv2.TM_CCOEFF_NORMED)
         loc = np.where(res >= threshold)
@@ -199,9 +198,6 @@ def get_image():
 
 def main():
     rospy.init_node('image_listener')
-    move_list_smooth(arm="left", p_list=[{'left_w0': -0.464412683001709, 'left_w1': 1.0829904350097657, 'left_w2': 0.5990194969848633, 'left_e0': 0.6089903720947266, 'left_e1': 1.0941117957092286, 'left_s0': -0.7643059266906739, 'left_s1': -0.570257357244873}
-], speed=0.3)
-    #move_list_smooth(arm="left", p_list=[{'left_w2': 0.0065,'left_w0': -0.0065}], speed=0.5)
     thread_get_image = threading.Thread(name='get_image', target=get_image)
     thread_align_camera_to_corners = threading.Thread(name='align_camera_to_corners', target=align_camera_to_corners)
     thread_get_image.start()
