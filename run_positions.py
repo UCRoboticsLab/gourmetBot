@@ -195,7 +195,7 @@ def move_list_smooth_wobble(neutral=False, arm=None, p_list=0, timeout=default_t
 
 
 
-def cartesian_move_abs(limb, x=None, y=None, z=None):
+def cartesian_move_abs(limb, x=None, y=None, z=None, smooth=True):
     def set_x(value):
         poses.pose.position.y = 1 - value
 
@@ -255,14 +255,17 @@ def cartesian_move_abs(limb, x=None, y=None, z=None):
         print("SUCCESS - Valid Joint Solution Found:")
         # Format solution into Limb API-compatible dictionary
         limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
-        move_list_smooth(arm=limb, p_list=[limb_joints])
+        if smooth:
+            move_list_smooth(arm=limb, p_list=[limb_joints])
+        else:
+            move_list(arm=limb, p_list=[limb_joints])
 
     else:
         print("INVALID POSE - No Valid Joint Solution Found.")
 
     return 0
 
-def cartesian_move_rel(limb, x=0.0, y=0.0, z=0.0, threshold=default_threshold):
+def cartesian_move_rel(limb, x=0.0, y=0.0, z=0.0, threshold=default_threshold, smooth=True):
     def set_x(value):
         poses.pose.position.y = 1 - value
 
@@ -315,7 +318,10 @@ def cartesian_move_rel(limb, x=0.0, y=0.0, z=0.0, threshold=default_threshold):
             print("SUCCESS - Valid Joint Solution Found:")
             # Format solution into Limb API-compatible dictionary
             limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
-            move_list_smooth(arm=limb, p_list=[limb_joints], threshold=threshold)
+            if smooth:
+                move_list_smooth(arm=limb, p_list=[limb_joints], threshold=threshold)
+            else:
+                move_list(arm=limb, p_list=[limb_joints], threshold=threshold)
 
         else:
             print("INVALID POSE - No Valid Joint Solution Found.")

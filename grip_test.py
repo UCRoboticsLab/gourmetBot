@@ -3,7 +3,6 @@
 import rospy
 import baxter_interface
 import time
-from run_positions import move_list
 
 from baxter_interface import CHECK_VERSION
 
@@ -17,7 +16,7 @@ grip_right = baxter_interface.Gripper('right', CHECK_VERSION)
 grip_left.set_moving_force(90)
 grip_left.set_velocity(90)
 
-#grip_left.calibrate()
+grip_left.calibrate()
 grip_left.open(block=True, timeout=15.0)
 
 #if not grip_0left.calibrated():
