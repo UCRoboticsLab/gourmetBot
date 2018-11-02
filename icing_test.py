@@ -27,25 +27,31 @@ def shake():
 def pump_and_up(x_diff=0.0, z_diff=0.0):
     global start_Y_pos
 
+    grip_left.set_moving_force(90)
+    grip_left.set_velocity(10)
+
+    cartesian_move_rel(limb="left", y=-0.03, smooth=False)
+
     grip_left.open(block=True, timeout=15.0)
-    time.sleep(5.0)
+    time.sleep(8.0)
+
+    cartesian_move_rel(limb="left", y=-0.01, smooth=False)
+
     grip_left.close(block=True, timeout=15.0)
     time.sleep(1.0)
-    cartesian_move_rel(limb="left", y=-0.02, smooth=False)
-    cartesian_move_rel(limb="left", y=0.02, smooth=False)
+    cartesian_move_rel(limb="left", y=0.04, smooth=False)
 
     #shake()
     time.sleep(1.0)
     print(abs(start_Y_pos - get_cartesian_positions('left')['position y:']))
-    cartesian_move_rel(limb="left",x=x_diff,y=0.09,z=z_diff, smooth=False)
+    cartesian_move_rel(limb="left",x=x_diff,y=0.05,z=z_diff, smooth=False)
     time.sleep(1.0)
 
 def lower_hand():
 
-    cartesian_move_rel(limb="left", y=-0.09, threshold=0.005, smooth=False)
+    cartesian_move_rel(limb="left", y=-0.05, threshold=0.005, smooth=False)
 
-grip_left.set_moving_force(90)
-grip_left.set_velocity(90)
+
 
 move_list(arm='left', p_list=[start_pos])
 time.sleep(1.0)
